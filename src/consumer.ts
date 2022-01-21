@@ -204,7 +204,7 @@ export class Consumer extends EventEmitter {
     try {
       if (this.heartbeatInterval) {
         heartbeat = this.startHeartbeat(async () => {
-          return this.changeVisabilityTimeout(message, this.visibilityTimeout);
+          await this.changeVisabilityTimeout(message, this.visibilityTimeout);
         });
       }
       await this.executeHandler(message);
@@ -273,9 +273,9 @@ export class Consumer extends EventEmitter {
     }
   }
 
-  private async changeVisabilityTimeout(message: SQSMessage, timeout: number): Promise<PromiseResult<any, AWSError>> {
+  private async changeVisabilityTimeout(message: SQSMessage, timeout: number): Promise<void> {
     try {
-      return this.sqs
+      await this.sqs
         .changeMessageVisibility({
           QueueUrl: this.queueUrl,
           ReceiptHandle: message.ReceiptHandle,
@@ -283,7 +283,6 @@ export class Consumer extends EventEmitter {
         })
         .promise();
     } catch (err) {
-      this.emit('error', err, message);
     }
   }
 
@@ -339,7 +338,7 @@ export class Consumer extends EventEmitter {
     try {
       if (this.heartbeatInterval) {
         heartbeat = this.startHeartbeat(async () => {
-          return this.changeVisabilityTimeoutBatch(messages, this.visibilityTimeout);
+          await this.changeVisabilityTimeoutBatch(messages, this.visibilityTimeout);
         });
       }
       await this.executeBatchHandler(messages);
@@ -387,7 +386,7 @@ export class Consumer extends EventEmitter {
     }
   }
 
-  private async changeVisabilityTimeoutBatch(messages: SQSMessage[], timeout: number): Promise<PromiseResult<any, AWSError>> {
+  private async changeVisabilityTimeoutBatch(messages: SQSMessage[], timeout: number): Promise<void> {
     const params = {
       QueueUrl: this.queueUrl,
       Entries: messages.map((message) => ({
@@ -397,11 +396,10 @@ export class Consumer extends EventEmitter {
       }))
     };
     try {
-      return this.sqs
+      await this.sqs
         .changeMessageVisibilityBatch(params)
         .promise();
     } catch (err) {
-      this.emit('error', err, messages);
     }
   }
 
